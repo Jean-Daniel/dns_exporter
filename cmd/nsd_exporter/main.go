@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Jean-Daniel/unbound_exporter/utils"
+	"github.com/Jean-Daniel/dns_exporter/utils"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
