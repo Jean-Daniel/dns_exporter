@@ -41,7 +41,7 @@ func newProtocolMetric(name string, metric string, description string) utils.Mat
 }
 
 var (
-	nsdSimpleMetrics = map[string]utils.SimpleMetric{
+	simpleMetrics = map[string]utils.SimpleMetric{
 		"time.boot":    newNsdSimpleMetrics("time_up_seconds_total", "Time since server boot in seconds.", prometheus.CounterValue),
 		"time.elapsed": newNsdSimpleMetrics("time_elapsed_seconds", "Time since the last stats report, in seconds.", prometheus.GaugeValue),
 
@@ -67,7 +67,7 @@ var (
 		"zone.slave":  newNsdSimpleMetrics("zones_slave", "Number of slave zones served.", prometheus.GaugeValue),
 	}
 
-	nsdRegexMetrics = []utils.MatchMetric{
+	regexMetrics = []utils.MatchMetric{
 		newProtocolMetric("num.udp", "queries_udp_total", "Number of queries over UDP."),
 		newProtocolMetric("num.tcp", "queries_tcp_total", "Number of queries over TCP."),
 
@@ -122,7 +122,7 @@ func main() {
 	kingpin.Parse()
 
 	log.Info("Starting nsd_exporter")
-	exporter, err := utils.NewMetricExporter("nsd", *controlHost, *controlCa, *controlCert, *controlKey, nsdSimpleMetrics, nsdRegexMetrics)
+	exporter, err := utils.NewMetricExporter("nsd", *controlHost, *controlCa, *controlCert, *controlKey, simpleMetrics, regexMetrics, nil)
 	if err != nil {
 		panic(err)
 	}

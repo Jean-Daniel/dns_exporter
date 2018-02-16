@@ -89,7 +89,7 @@ type MetricsExporter struct {
 }
 
 // NewMetricExporter …
-func NewMetricExporter(name string, host string, ca string, cert string, key string, simpleMetrics map[string]SimpleMetric, matchMetrics []MatchMetric) (*MetricsExporter, error) {
+func NewMetricExporter(name string, host string, ca string, cert string, key string, simpleMetrics map[string]SimpleMetric, matchMetrics []MatchMetric, histogramMetrics []HistogramMetric) (*MetricsExporter, error) {
 	/* Server authentication. */
 	caData, err := ioutil.ReadFile(ca)
 	if err != nil {
@@ -121,9 +121,10 @@ func NewMetricExporter(name string, host string, ca string, cert string, key str
 			RootCAs:      roots,
 			ServerName:   name,
 		},
-		upDesc:        prometheus.NewDesc(prometheus.BuildFQName(name, "", "up"), "Whether scraping metrics was successful.", nil, nil),
-		matchMetrics:  matchMetrics,
-		simpleMetrics: simpleMetrics,
+		upDesc:           prometheus.NewDesc(prometheus.BuildFQName(name, "", "up"), "Whether scraping metrics was successful.", nil, nil),
+		matchMetrics:     matchMetrics,
+		simpleMetrics:    simpleMetrics,
+		histogramMetrics: histogramMetrics,
 	}, nil
 }
 
