@@ -46,7 +46,7 @@ type RegexMetric struct {
 // NewRegexMetric returns a new RegexMetric
 func NewRegexMetric(ns string, name string, description string, valueType prometheus.ValueType, labels []string, pattern string) MatchMetric {
 	return &RegexMetric{
-		desc:      prometheus.NewDesc(prometheus.BuildFQName("nsd", "", name), description, labels, nil),
+		desc:      prometheus.NewDesc(prometheus.BuildFQName(ns, "", name), description, labels, nil),
 		valueType: valueType,
 		pattern:   regexp.MustCompile(pattern),
 	}
