@@ -47,7 +47,7 @@ var (
 
 		"size.db.disk":  newNsdSimpleMetrics("db_size_disk_bytes", "Size of nsd.db on disk, in bytes.", prometheus.GaugeValue),
 		"size.db.mem":   newNsdSimpleMetrics("db_size_mem_bytes", "Size of the DNS database in memory, in bytes.", prometheus.GaugeValue),
-		"size.xfrd.mem": newNsdSimpleMetrics("db_size_mem_bytes", "Size of the DNS database in memory, in bytes.", prometheus.GaugeValue),
+		"size.xfrd.mem": newNsdSimpleMetrics("xfrd_size_mem_bytes", "Size of the DNS database in memory, in bytes.", prometheus.GaugeValue),
 
 		"size.config.disk": newNsdSimpleMetrics("zone_size_disk_bytes", "Size of zonelist file on disk, excludes the nsd.conf size, in bytes.", prometheus.GaugeValue),
 		"size.config.mem":  newNsdSimpleMetrics("zone_size_mem_bytes", "Size of zonelist file in memory, kept twice in server and xfrd process, in bytes.", prometheus.GaugeValue),
