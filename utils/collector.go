@@ -52,6 +52,14 @@ func NewRegexMetric(ns string, name string, description string, valueType promet
 	}
 }
 
+// HistogramMetric …
+type HistogramMetric interface {
+	Desc() *prometheus.Desc
+	Init()
+	Match(name string, value string) bool
+	Collect(ch chan<- prometheus.Metric)
+}
+
 // Desc …
 func (m *RegexMetric) Desc() *prometheus.Desc {
 	return m.desc
@@ -72,11 +80,12 @@ func (m *RegexMetric) Match(name string, value float64, ch chan<- prometheus.Met
 
 // MetricsExporter …
 type MetricsExporter struct {
-	host          string
-	tlsConfig     tls.Config
-	matchMetrics  []MatchMetric
-	simpleMetrics map[string]SimpleMetric
-	upDesc        *prometheus.Desc
+	host             string
+	tlsConfig        tls.Config
+	matchMetrics     []MatchMetric
+	simpleMetrics    map[string]SimpleMetric
+	histogramMetrics []HistogramMetric
+	upDesc           *prometheus.Desc
 }
 
 // NewMetricExporter …
@@ -122,6 +131,12 @@ func (m *MetricsExporter) collectFromReader(file io.Reader, ch chan<- prometheus
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
+	// Reset histograms
+	for _, metric := range m.histogramMetrics {
+		metric.Init()
+	}
+
+Scan:
 	for scanner.Scan() {
 		fields := strings.Split(scanner.Text(), "=")
 		if len(fields) != 2 {
@@ -129,25 +144,38 @@ func (m *MetricsExporter) collectFromReader(file io.Reader, ch chan<- prometheus
 				"%q is not a valid key-value pair",
 				scanner.Text())
 		}
+
+		// 1. try histograms
+		for _, metric := range m.histogramMetrics {
+			if metric.Match(fields[0], fields[1]) {
+				continue Scan
+			}
+		}
+
 		value, err := strconv.ParseFloat(fields[1], 64)
 		if err != nil {
 			log.Errorf("Failed to parse '%s' metric value: %s", fields[0], err)
 			continue
 		}
 
-		// 1. lookup simple metric map
+		// Lookup simple metric map
 		metric, ok := m.simpleMetrics[fields[0]]
 		if ok {
 			ch <- prometheus.MustNewConstMetric(metric.desc, metric.valueType, value)
 			continue
 		}
 
-		// 2. try regexp metrics
+		// Try regexp metrics
 		for _, metric := range m.matchMetrics {
 			if metric.Match(fields[0], value, ch) {
-				break
+				continue Scan
 			}
 		}
+	}
+
+	// Finalize histograms
+	for _, metric := range m.histogramMetrics {
+		metric.Collect(ch)
 	}
 
 	return scanner.Err()
@@ -177,6 +205,9 @@ func (m *MetricsExporter) Describe(ch chan<- *prometheus.Desc) {
 		ch <- metric.desc
 	}
 	for _, metric := range m.matchMetrics {
+		ch <- metric.Desc()
+	}
+	for _, metric := range m.histogramMetrics {
 		ch <- metric.Desc()
 	}
 }

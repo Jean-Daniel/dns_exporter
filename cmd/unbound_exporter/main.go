@@ -3,7 +3,10 @@ package main
 import (
 	"net/http"
 	"path"
+	"regexp"
 	"runtime"
+	"sort"
+	"strconv"
 
 	"github.com/Jean-Daniel/dns_exporter/utils"
 	"github.com/prometheus/client_golang/prometheus"
@@ -11,14 +14,15 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-var (
-	/*
-		unboundHistogram = prometheus.NewDesc(
-			prometheus.BuildFQName("unbound", "", "response_time_seconds"),
-			"Query response time in seconds.",
-			nil, nil)
-	*/
+type unboundHistogram struct {
+	desc             *prometheus.Desc
+	pattern          *regexp.Regexp
+	histogramCount   uint64
+	histogramAvg     float64
+	histogramBuckets map[float64]uint64
+}
 
+var (
 	simpleMetrics = map[string]utils.SimpleMetric{
 		"total.recursion.time.avg": newSimpleMetric(
 			"recursion_time_seconds_avg",
@@ -238,70 +242,74 @@ var (
 			[]string{"rcode"},
 			"^num\\.answer\\.rcode\\.(\\w+)$"),
 	}
+
+	histogramMetrics = []utils.HistogramMetric{
+		&unboundHistogram{
+			desc:    prometheus.NewDesc(prometheus.BuildFQName("unbound", "", "response_time_seconds"), "Query response time in seconds.", nil, nil),
+			pattern: regexp.MustCompile("^histogram\\.\\d+\\.\\d+\\.to\\.(\\d+\\.\\d+)$"),
+		},
+	}
 )
 
-/*
-func collectFromReader(file io.Reader, ch chan<- prometheus.Metric) error {
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	histogramPattern := regexp.MustCompile("^histogram\\.\\d+\\.\\d+\\.to\\.(\\d+\\.\\d+)$")
-
-	histogramCount := uint64(0)
-	histogramAvg := float64(0)
-	histogramBuckets := make(map[float64]uint64)
-
-	for scanner.Scan() {
-		fields := strings.Split(scanner.Text(), "=")
-		if len(fields) != 2 {
-			return fmt.Errorf(
-				"%q is not a valid key-value pair",
-				scanner.Text())
-		}
-
-		if matches := histogramPattern.FindStringSubmatch(fields[0]); matches != nil {
-			end, err := strconv.ParseFloat(matches[1], 64)
-			if err != nil {
-				return err
-			}
-			value, err := strconv.ParseUint(fields[1], 10, 64)
-
-			if err != nil {
-				return err
-			}
-			histogramBuckets[end] = value
-			histogramCount += value
-		} else if fields[0] == "total.recursion.time.avg" {
-			value, err := strconv.ParseFloat(fields[1], 64)
-			if err != nil {
-				return err
-			}
-			histogramAvg = value
-		}
-	}
-
-	// Convert the metrics to a cumulative Prometheus histogram.
-	// Reconstruct the sum of all samples from the average value
-	// provided by Unbound. Hopefully this does not break
-	// monotonicity.
-	keys := []float64{}
-	for k := range histogramBuckets {
-		keys = append(keys, k)
-	}
-	sort.Float64s(keys)
-	prev := uint64(0)
-	for _, i := range keys {
-		histogramBuckets[i] += prev
-		prev = histogramBuckets[i]
-	}
-	ch <- prometheus.MustNewConstHistogram(
-		unboundHistogram,
-		histogramCount,
-		histogramAvg*float64(histogramCount),
-		histogramBuckets)
-
-	return scanner.Err()
+func (h *unboundHistogram) Desc() *prometheus.Desc {
+	return h.desc
 }
-*/
+
+func (h *unboundHistogram) Init() {
+	h.histogramCount = uint64(0)
+	h.histogramAvg = float64(0)
+	h.histogramBuckets = make(map[float64]uint64)
+}
+
+func (h *unboundHistogram) Match(name string, valuestr string) bool {
+	if matches := h.pattern.FindStringSubmatch(name); matches != nil {
+		end, err := strconv.ParseFloat(matches[1], 64)
+		if err != nil {
+			log.Warnf("error while parsing %s index: %s", name, err)
+			return true
+		}
+		value, err := strconv.ParseUint(valuestr, 10, 64)
+		if err != nil {
+			log.Warnf("error while parsing %s value: %s", name, err)
+			return true
+		}
+
+		h.histogramBuckets[end] = value
+		h.histogramCount += value
+	} else if name == "total.recursion.time.avg" {
+		value, err := strconv.ParseFloat(valuestr, 64)
+		if err != nil {
+			log.Warnf("error while parsing %s value: %s", name, err)
+			return false
+		}
+		h.histogramAvg = value
+		// returns false as we want to collect it as simple metric too
+	}
+	return false
+}
+
+func (h *unboundHistogram) Collect(ch chan<- prometheus.Metric) {
+	if h.histogramCount > 0 && h.histogramAvg != 0 {
+		// Convert the metrics to a cumulative Prometheus histogram.
+		// Reconstruct the sum of all samples from the average value
+		// provided by Unbound. Hopefully this does not break monotonicity.
+		keys := []float64{}
+		for k := range h.histogramBuckets {
+			keys = append(keys, k)
+		}
+		sort.Float64s(keys)
+		prev := uint64(0)
+		for _, i := range keys {
+			h.histogramBuckets[i] += prev
+			prev = h.histogramBuckets[i]
+		}
+		ch <- prometheus.MustNewConstHistogram(
+			h.desc,
+			h.histogramCount,
+			h.histogramAvg*float64(h.histogramCount),
+			h.histogramBuckets)
+	}
+}
 
 func newSimpleMetric(name string, description string, valueType prometheus.ValueType) utils.SimpleMetric {
 	return utils.NewSimpleMetric("unbound", name, description, valueType)
