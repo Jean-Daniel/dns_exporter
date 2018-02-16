@@ -112,12 +112,12 @@ func main() {
 		nsdPrefix = "/var/nsd/etc"
 	}
 	var (
-		listenAddress = kingpin.Arg("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9167").String()
-		metricsPath   = kingpin.Arg("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
-		controlHost   = kingpin.Arg("nsd.host", "NSD control socket hostname and port number (or absolute path).").Default("localhost:8952").String()
-		controlCa     = kingpin.Arg("nsd.ca", "Unbound server certificate.").Default(path.Join(nsdPrefix, "nsd_server.pem")).String()
-		controlCert   = kingpin.Arg("nsd.cert", "Unbound client certificate.").Default(path.Join(nsdPrefix, "nsd_control.pem")).String()
-		controlKey    = kingpin.Arg("nsd.key", "Unbound client key.").Default(path.Join(nsdPrefix, "nsd_control.key")).String()
+		listenAddress = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9167").String()
+		metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
+		controlHost   = kingpin.Flag("nsd.host", "NSD control socket hostname and port number (or absolute path).").Default("localhost:8952").String()
+		controlCa     = kingpin.Flag("nsd.ca", "Unbound server certificate.").Default(path.Join(nsdPrefix, "nsd_server.pem")).String()
+		controlCert   = kingpin.Flag("nsd.cert", "Unbound client certificate.").Default(path.Join(nsdPrefix, "nsd_control.pem")).String()
+		controlKey    = kingpin.Flag("nsd.key", "Unbound client key.").Default(path.Join(nsdPrefix, "nsd_control.key")).String()
 	)
 	kingpin.Parse()
 

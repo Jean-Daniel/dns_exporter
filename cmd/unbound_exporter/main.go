@@ -317,12 +317,12 @@ func main() {
 		unboundPrefix = "/var/unbound/etc"
 	}
 	var (
-		listenAddress = kingpin.Arg("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9167").String()
-		metricsPath   = kingpin.Arg("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
-		controlHost   = kingpin.Arg("unbound.host", "Unbound control socket hostname and port number (or absolute path).").Default("localhost:8953").String()
-		controlCa     = kingpin.Arg("unbound.ca", "Unbound server certificate.").Default(path.Join(unboundPrefix, "unbound_server.pem")).String()
-		controlCert   = kingpin.Arg("unbound.cert", "Unbound client certificate.").Default(path.Join(unboundPrefix, "unbound_control.pem")).String()
-		controlKey    = kingpin.Arg("unbound.key", "Unbound client key.").Default(path.Join(unboundPrefix, "unbound_control.key")).String()
+		listenAddress = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9167").String()
+		metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
+		controlHost   = kingpin.Flag("unbound.host", "Unbound control socket hostname and port number (or absolute path).").Default("localhost:8953").String()
+		controlCa     = kingpin.Flag("unbound.ca", "Unbound server certificate.").Default(path.Join(unboundPrefix, "unbound_server.pem")).String()
+		controlCert   = kingpin.Flag("unbound.cert", "Unbound client certificate.").Default(path.Join(unboundPrefix, "unbound_control.pem")).String()
+		controlKey    = kingpin.Flag("unbound.key", "Unbound client key.").Default(path.Join(unboundPrefix, "unbound_control.key")).String()
 	)
 	kingpin.Parse()
 
