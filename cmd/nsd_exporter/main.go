@@ -36,7 +36,7 @@ func (m *protocolMetric) Match(name string, value float64, ch chan<- prometheus.
 func newProtocolMetric(name string, metric string, description string) utils.MatchMetric {
 	return &protocolMetric{
 		name: name,
-		desc: prometheus.NewDesc(prometheus.BuildFQName("nsd", "", metric), description, nil, nil),
+		desc: prometheus.NewDesc(prometheus.BuildFQName("nsd", "", metric), description, []string{"protocol"}, nil),
 	}
 }
 
