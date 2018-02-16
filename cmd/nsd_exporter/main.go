@@ -112,7 +112,7 @@ func main() {
 		nsdPrefix = "/var/nsd/etc"
 	}
 	var (
-		listenAddress = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9167").String()
+		listenAddress = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9168").String()
 		metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
 		controlHost   = kingpin.Flag("nsd.host", "NSD control socket hostname and port number (or absolute path).").Default("localhost:8952").String()
 		controlCa     = kingpin.Flag("nsd.ca", "Unbound server certificate.").Default(path.Join(nsdPrefix, "nsd_server.pem")).String()
@@ -122,7 +122,7 @@ func main() {
 	kingpin.Parse()
 
 	log.Info("Starting nsd_exporter")
-	exporter, err := utils.NewMetricExporter("nsd", *controlHost, *controlCa, *controlCert, *controlKey, simpleMetrics, regexMetrics, nil)
+	exporter, err := utils.NewMetricExporter("nsd", "NSDCT1", *controlHost, *controlCa, *controlCert, *controlKey, simpleMetrics, regexMetrics, nil)
 	if err != nil {
 		panic(err)
 	}

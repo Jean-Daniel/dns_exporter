@@ -335,7 +335,7 @@ func main() {
 	kingpin.Parse()
 
 	log.Info("Starting unbound_exporter")
-	exporter, err := utils.NewMetricExporter("unbound", *controlHost, *controlCa, *controlCert, *controlKey, simpleMetrics, regexMetrics, histogramMetrics)
+	exporter, err := utils.NewMetricExporter("unbound", "UBCT1", *controlHost, *controlCa, *controlCert, *controlKey, simpleMetrics, regexMetrics, histogramMetrics)
 	if err != nil {
 		panic(err)
 	}

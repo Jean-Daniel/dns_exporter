@@ -80,6 +80,7 @@ func (m *RegexMetric) Match(name string, value float64, ch chan<- prometheus.Met
 
 // MetricsExporter …
 type MetricsExporter struct {
+	protocol         string
 	host             string
 	tlsConfig        tls.Config
 	matchMetrics     []MatchMetric
@@ -89,7 +90,7 @@ type MetricsExporter struct {
 }
 
 // NewMetricExporter …
-func NewMetricExporter(name string, host string, ca string, cert string, key string, simpleMetrics map[string]SimpleMetric, matchMetrics []MatchMetric, histogramMetrics []HistogramMetric) (*MetricsExporter, error) {
+func NewMetricExporter(name string, protocol string, host string, ca string, cert string, key string, simpleMetrics map[string]SimpleMetric, matchMetrics []MatchMetric, histogramMetrics []HistogramMetric) (*MetricsExporter, error) {
 	/* Server authentication. */
 	caData, err := ioutil.ReadFile(ca)
 	if err != nil {
@@ -115,7 +116,8 @@ func NewMetricExporter(name string, host string, ca string, cert string, key str
 	}
 
 	return &MetricsExporter{
-		host: host,
+		protocol: protocol,
+		host:     host,
 		tlsConfig: tls.Config{
 			Certificates: []tls.Certificate{keyPair},
 			RootCAs:      roots,
@@ -192,7 +194,7 @@ func (m *MetricsExporter) collectFromSocket(ch chan<- prometheus.Metric) error {
 		return err
 	}
 	defer conn.Close()
-	_, err = conn.Write([]byte("UBCT1 stats_noreset\n"))
+	_, err = conn.Write([]byte(m.protocol + " stats_noreset\n"))
 	if err != nil {
 		return err
 	}
