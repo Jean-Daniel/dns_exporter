@@ -79,22 +79,22 @@ var (
 		newNsdRegexMetric("query_type_total",
 			"Total number of queries with a given type.",
 			prometheus.CounterValue,
-			[]string{"type"}, "^num\\.type\\.([\\w]+)$"),
+			[]string{"zone", "type"}, "^([\\w\\.0-9-]+)\\.num\\.type\\.([\\w]+)$"),
 		// num.opcode.X
 		newNsdRegexMetric("query_opcode_total",
 			"Total number of queries with a given opcode.",
 			prometheus.CounterValue,
-			[]string{"opcode"}, "^num\\.opcode\\.([\\w]+)$"),
+			[]string{"zone", "opcode"}, "^([\\w\\.0-9-]+)\\.num\\.opcode\\.([\\w]+)$"),
 		// num.class.X
 		newNsdRegexMetric("query_class_total",
 			"Total number of queries with a given class.",
 			prometheus.CounterValue,
-			[]string{"class"}, "^num\\.class\\.([\\w]+)$"),
+			[]string{"zone", "class"}, "^([\\w\\.0-9-]+)\\.num\\.class\\.([\\w]+)$"),
 		// num.rcode.X
 		newNsdRegexMetric("query_rcode_total",
 			"Total number of queries with a given rcode.",
 			prometheus.CounterValue,
-			[]string{"rcode"}, "^num\\.rcode\\.([\\w]+)$"),
+			[]string{"zone", "rcode"}, "^([\\w\\.0-9-]+)\\.num\\.rcode\\.([\\w]+)$"),
 	}
 )
 
